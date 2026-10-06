@@ -34,5 +34,5 @@ module.exports = { add, multiply };
 **ES Modules (supported in modern Node.js):**
 
 ```js
-Node can also use file with .mjs extension
+Node can also use file with .mjs extension such as import fs from "fs"
 ```
