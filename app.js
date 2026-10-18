@@ -1,5 +1,5 @@
 const express = require("express");
-const timeRouter = require("./routes/timeRoutes");
+const timeRouter = require("./routes/timeRoutes"); //imports a router and says that timer routes should live under /api
 
 const app = express();
 
