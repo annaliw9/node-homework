@@ -1,5 +1,12 @@
 const express = require("express");
 const timeRouter = require("./routes/timeRoutes"); //imports a router and says that timer routes should live under /api
+const userRouter = require("./routes/userRoutes");
+const notFound = require("./middleware/not-found");
+const errorHandler = require("./middleware/error-handler");
+
+global.user_id = null;
+global.users = [];
+global.tasks = [];
 
 const app = express();
 
@@ -7,6 +14,8 @@ app.use(express.json());
 
 // Mount the timeRouter on the /api path
 app.use("/api", timeRouter);
+// Mount the userRouter on the /api/users path
+app.use("/api/users", userRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
@@ -18,11 +27,14 @@ app.post("/testpost", (req, res) => {
   });
 });
 
-app.all("/{*splat}", (req, res) => {
-  res.status(404).json({
-    message: `No route found for ${req.method} ${req.path}`,
-  });
-});
+// app.all("/{*splat}", (req, res) => {
+//   res.status(404).json({
+//     message: `No route found for ${req.method} ${req.path}`,
+//   });
+// });
+
+app.use(notFound);
+app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
 
