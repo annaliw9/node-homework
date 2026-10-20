@@ -47,6 +47,14 @@ app.use((req, res, next) => {
 
 app.use("/", dogsRouter); // Do not remove this line
 
+//Custom middleware to handle 404 errors for unmatched routes
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Route not found",
+    requestId: req.requestId,
+  });
+});
+
 //Custom middleware to handle errors and send appropriate responses based on the error type
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
@@ -62,14 +70,6 @@ app.use((err, req, res, next) => {
     requestId: req.requestId,
   });
 });
-
-// //Custom middleware to handle 404 errors for unmatched routes
-// app.use((req, res) => {
-//   res.status(404).json({
-//     error: "Route not found",
-//     requestId: req.requestId,
-//   });
-// });
 
 // //Custom error-handling middleware to catch and respond to errors
 // app.use((err, req, res, next) => {
