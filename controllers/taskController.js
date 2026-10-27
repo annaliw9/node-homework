@@ -60,7 +60,7 @@ async function index(req, res, next) {
 async function show(req, res, next) {
   try {
     const taskId = parseInt(req.params?.id);
-    if (!Number(taskId)) {
+    if (!Number.isNaN(taskId)) {
       return res.status(400).json({ message: "ID is not valid" });
     }
     const task = global.tasks.find(
@@ -104,7 +104,7 @@ async function update(req, res, next) {
 async function deleteTask(req, res, next) {
   try {
     const taskId = parseInt(req.params?.id);
-    if (!Number(taskId)) {
+    if (!Number.isNaN(taskId)) {
       return res.status(400).json({ message: "ID is not valid" });
     }
     const taskIndex = global.tasks.findIndex(
