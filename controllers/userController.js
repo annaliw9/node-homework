@@ -1,4 +1,4 @@
-const userSchema = require("../validation/userSchema");
+const { userSchema } = require("../validation/userSchema");
 const crypto = require("crypto");
 const util = require("util");
 const scrypt = util.promisify(crypto.scrypt);

@@ -14,4 +14,4 @@ const userSchema = Joi.object({
     }),
 });
 
-module.exports = userSchema;
+module.exports = { userSchema };
