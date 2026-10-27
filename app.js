@@ -3,6 +3,8 @@ const timeRouter = require("./routes/timeRoutes"); //imports a router and says t
 const userRouter = require("./routes/userRoutes");
 const notFound = require("./middleware/not-found");
 const errorHandler = require("./middleware/error-handler");
+const authMiddleware = require("./middleware/auth");
+const taskRouter = require("./routes/taskRoutes");
 
 global.user_id = null;
 global.users = [];
@@ -12,10 +14,9 @@ const app = express();
 
 app.use(express.json());
 
-// Mount the timeRouter on the /api path
-app.use("/api", timeRouter);
-// Mount the userRouter on the /api/users path
-app.use("/api/users", userRouter);
+app.use("/api", timeRouter); // Mount the timeRouter on the /api path
+app.use("/api/users", userRouter); // Mount the userRouter on the /api/users path
+app.use("/api/tasks", authMiddleware, taskRouter); // Apply authMiddleware to all task routes, protected routes
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
