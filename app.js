@@ -5,6 +5,7 @@ const notFound = require("./middleware/not-found");
 const errorHandler = require("./middleware/error-handler");
 const authMiddleware = require("./middleware/auth");
 const taskRouter = require("./routes/taskRoutes");
+const pool = require("./db/pg-pool");
 
 global.user_id = null;
 global.users = [];
@@ -20,6 +21,17 @@ app.use("/api/tasks", authMiddleware, taskRouter); // Apply authMiddleware to al
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
+});
+
+app.get("/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ status: "ok", db: "connected" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: `db not connected, error: ${err.message}` });
+  }
 });
 
 app.post("/testpost", (req, res) => {
@@ -69,6 +81,10 @@ async function shutdown(code = 0) {
       });
     });
     console.log("HTTP server closed.");
+
+    // Close all PostgreSQL connections after the HTTP server has stopped.
+    await pool.end();
+    console.log("PostgreSQL connection pool closed.");
   } catch (err) {
     console.error("Error during shutdown:", err);
     code = 1;
