@@ -6,7 +6,6 @@ const errorHandler = require("./middleware/error-handler");
 const authMiddleware = require("./middleware/auth");
 const taskRouter = require("./routes/taskRoutes");
 const prisma = require("./db/prisma");
-
 global.user_id = null;
 global.users = [];
 global.tasks = [];
@@ -23,16 +22,6 @@ app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-// app.get("/health", async (req, res) => {
-//   try {
-//     await pool.query("SELECT 1");
-//     res.json({ status: "ok", db: "connected" });
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json({ message: `db not connected, error: ${err.message}` });
-//   }
-// });
 app.get("/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
