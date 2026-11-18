@@ -116,9 +116,6 @@ async function index(req, res, next) {
       where: whereClause,
     });
 
-    if (totalTasks === 0) {
-      return res.status(404).json({ message: "No tasks found" });
-    }
     //Build pagination object with complete metadata
     const pagination = {
       page,
@@ -226,7 +223,7 @@ async function deleteTask(req, res, next) {
         id: taskId,
         userId: global.user_id,
       },
-      select: { title: true, isCompleted: true, id: true },
+      select: { title: true, priority: true, isCompleted: true, id: true },
     });
 
     if (!task) {
