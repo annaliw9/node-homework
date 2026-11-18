@@ -5,6 +5,7 @@ const notFound = require("./middleware/not-found");
 const errorHandler = require("./middleware/error-handler");
 const authMiddleware = require("./middleware/auth");
 const taskRouter = require("./routes/taskRoutes");
+const analyticsRouter = require("./routes/analyticsRoutes");
 const prisma = require("./db/prisma");
 global.user_id = null;
 global.users = [];
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use("/api", timeRouter); // Mount the timeRouter on the /api path
 app.use("/api/users", userRouter); // Mount the userRouter on the /api/users path
 app.use("/api/tasks", authMiddleware, taskRouter); // Apply authMiddleware to all task routes, protected routes
+app.use("/api/analytics", authMiddleware, analyticsRouter); // Apply authMiddleware to all analytics routes, protected routes
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
