@@ -3,6 +3,28 @@ const crypto = require("crypto");
 const util = require("util");
 const scrypt = util.promisify(crypto.scrypt);
 const prisma = require("../db/prisma");
+const { randomUUID } = require("crypto");
+const jwt = require("jsonwebtoken");
+
+// Helper function to set cookie flags based on environment
+const cookieFlags = (req) => {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", //only when HTTPS is available
+    sameSite: "Strict",
+  };
+};
+
+//Helper function to set JWT cookie
+const setJwtCookie = (req, res, user) => {
+  //Sign JWT
+  const payload = { id: user.id, csrfToken: randomUUID() };
+  //Sign the JWT with a 1-hour expiration
+  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+  //Set cookie. Cookie flags have to be different in production and in test.
+  res.cookie("jwt", token, { ...cookieFlags(req), maxAge: 3600000 }); // 1 hour expiration
+  return payload.csrfToken; // Return the CSRF token to the client for use in subsequent requests. This is needed in the body returned by logon() or register()
+};
 
 async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -46,6 +68,9 @@ async function register(req, res, next) {
         select: { id: true, email: true, name: true },
       });
 
+      // Set the JWT cookie
+      const csrfToken = setJwtCookie(req, res, newUser);
+
       // Create 3 welcome tasks using createMany
       const welcomeTaskData = [
         {
@@ -73,17 +98,15 @@ async function register(req, res, next) {
         },
       });
 
-      return { user: newUser, welcomeTasks };
+      return { user: newUser, welcomeTasks, csrfToken };
     });
-
-    // Store the user ID globally for session management (not secure for production)
-    global.user_id = result.user.id;
 
     // Send response with status 201
     res.status(201);
     res.json({
       user: result.user,
       welcomeTasks: result.welcomeTasks,
+      csrfToken: result.csrfToken,
       transactionStatus: "success",
     });
     return;
@@ -97,6 +120,7 @@ async function register(req, res, next) {
   }
 }
 
+// Log in a user
 async function logon(req, res, next) {
   try {
     let { email, password } = req.body;
@@ -119,37 +143,47 @@ async function logon(req, res, next) {
     if (!goodCredentials) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-    global.user_id = user.id;
+
+    // Set the JWT cookie and get the CSRF token
+    const csrfToken = setJwtCookie(req, res, user);
 
     return res.status(200).json({
       name: user.name,
       email: user.email,
       message: "User logged in successfully",
+      csrfToken,
     });
   } catch (error) {
     next(error);
   }
 }
 
+// Log off a user
 async function logoff(req, res, next) {
   try {
-    global.user_id = null;
+    // Clear the JWT cookie
+    res.clearCookie("jwt", cookieFlags(req));
     return res.status(200).json({ message: "User logged off successfully" });
   } catch (error) {
     next(error);
   }
 }
 
-//show a single user by ID
+// Show a single user by ID
 async function show(req, res, next) {
   try {
     const userId = parseInt(req.params.id);
 
+    //Validate user ID
     if (isNaN(userId)) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
-
-    if (userId !== global.user_id) {
+    //Check whether the user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    //Check whether the user exists
+    if (userId !== req.user.id) {
       return res.status(403).json({ error: "Forbidden" });
     }
 
