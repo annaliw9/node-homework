@@ -9,7 +9,6 @@ const analyticsRouter = require("./routes/analyticsRoutes");
 const prisma = require("./db/prisma");
 const cookieParser = require("cookie-parser"); // reads the incoming cookie so middleware can accessrequests
 
-// global.user_id = null;
 global.users = [];
 global.tasks = [];
 
