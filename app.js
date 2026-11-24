@@ -19,8 +19,6 @@ const helmet = require("helmet");
 const { xss } = require("express-xss-sanitizer");
 const rateLimiter = require("express-rate-limit");
 
-app.use(express.json()); //Parse incoming JSON requests and puts the parsed data in req.body
-app.use(cookieParser()); // Use cookie-parser middleware to parse cookies from incoming requests
 // Slows down clients that send too many requests.
 app.use(
   rateLimiter({
@@ -28,6 +26,10 @@ app.use(
     max: 100, //Limit each IP to 100 requests per windowMs
   }),
 );
+
+app.use(express.json()); //Parse incoming JSON requests and puts the parsed data in req.body
+app.use(cookieParser()); // Use cookie-parser middleware to parse cookies from incoming requests
+
 app.use(helmet()); //Sets helpful security-related HTTP headers
 app.use(xss()); //Sanitizes incoming request data.
 app.use("/api", timeRouter); // Mount the timeRouter on the /api path
