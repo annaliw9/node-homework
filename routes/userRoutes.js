@@ -2,7 +2,7 @@
 
 const express = require("express");
 const userController = require("../controllers/userController");
-const jwtMiddleware = require("./middleware/jwtMiddleware");
+const jwtMiddleware = require("../middleware/jwtMiddleware");
 
 const router = express.Router();
 
