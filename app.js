@@ -3,22 +3,37 @@ const timeRouter = require("./routes/timeRoutes"); //imports a router and says t
 const userRouter = require("./routes/userRoutes");
 const notFound = require("./middleware/not-found");
 const errorHandler = require("./middleware/error-handler");
-const authMiddleware = require("./middleware/auth");
+const jwtMiddleware = require("./middleware/jwtMiddleware");
 const taskRouter = require("./routes/taskRoutes");
 const analyticsRouter = require("./routes/analyticsRoutes");
 const prisma = require("./db/prisma");
-global.user_id = null;
+const cookieParser = require("cookie-parser"); // reads the incoming cookie so middleware can accessrequests
+
+// global.user_id = null;
 global.users = [];
 global.tasks = [];
 
 const app = express();
+app.set("trust proxy", 1);
+const helmet = require("helmet");
+const { xss } = require("express-xss-sanitizer");
+const rateLimiter = require("express-rate-limit");
 
-app.use(express.json());
-
+app.use(express.json()); //Parse incoming JSON requests and puts the parsed data in req.body
+app.use(cookieParser()); // Use cookie-parser middleware to parse cookies from incoming requests
+// Slows down clients that send too many requests.
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, //15 minutes
+    max: 100, //Limit each IP to 100 requests per windowMs
+  }),
+);
+app.use(helmet()); //Sets helpful security-related HTTP headers
+app.use(xss()); //Sanitizes incoming request data.
 app.use("/api", timeRouter); // Mount the timeRouter on the /api path
 app.use("/api/users", userRouter); // Mount the userRouter on the /api/users path
-app.use("/api/tasks", authMiddleware, taskRouter); // Apply authMiddleware to all task routes, protected routes
-app.use("/api/analytics", authMiddleware, analyticsRouter); // Apply authMiddleware to all analytics routes, protected routes
+app.use("/api/tasks", jwtMiddleware, taskRouter); // Apply jwtMiddleware to all task routes, protected routes
+app.use("/api/analytics", jwtMiddleware, analyticsRouter); // Apply jwtMiddleware to all analytics routes, protected routes
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
